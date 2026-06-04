@@ -1,0 +1,21 @@
+{
+  "name": "reading-notes-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "server": "cd server && node index.js",
+    "client": "cd client && npx vite",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "setup": "cd server && npm install"
+  },
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0"
+  }
+}

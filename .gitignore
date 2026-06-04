@@ -1,0 +1,9 @@
+node_modules/
+.env
+*.db
+server/uploads/*
+!server/uploads/.gitkeep
+client/dist/
+android/
+dist/
+.DS_Store

@@ -1,0 +1,10 @@
+{
+  "appId": "com.readingnotes.app",
+  "appName": "读书阁",
+  "webDir": "client/dist",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true,
+    "allowNavigation": ["*"]
+  }
+}
