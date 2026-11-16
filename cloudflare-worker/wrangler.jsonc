@@ -1,0 +1,27 @@
+﻿{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "reading-notes-app",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-01",
+  "observability": { "enabled": true },
+
+  // 普通变量（非敏感）。Secret 不要写在这里：
+  //   wrangler secret put OPENROUTER_API_KEY
+  //   wrangler secret put APP_TOKEN
+  "vars": {
+    "AI_MODEL": "openrouter/free",
+    "ALLOWED_MODELS": "",
+    "ALLOWED_PROVIDERS": "openrouter",
+    "ALLOW_PAID_MODELS": "false",
+    "AI_MAX_INPUT_CHARS": "4000",
+    "AI_RATE_PER_MIN": "10",
+    "AI_RATE_PER_DAY": "200",
+    "AI_GLOBAL_DAILY": "300",
+    "AI_TIMEOUT_MS": "25000",
+    "APP_REFERER": "https://xinjian.local"
+  }
+
+  // 可选绑定（默认不启用，启用后配额作用域会变化，详见 README）
+  // "kv_namespaces": [{ "binding": "DAILY_KV", "id": "<你的 KV namespace id>" }],
+  // "ratelimits": [{ "name": "RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } }]
+}
