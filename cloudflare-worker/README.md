@@ -170,3 +170,20 @@ App 只依赖 `POST /api/ai/analyze` 的请求/响应结构，**未受影响**�
 2. 未做真实云端部署（无 Cloudflare 账号操作），仅本地 workerd 全量测试。
 3. 真实 OpenRouter 成功调用未验证（只有失败分支用假 Key 验证过）。
 4. 全局日配额默认是每 isolate 计数，非严格全局。
+
+---
+
+## 部署根目录（Cloudflare 连接 Git 时必须填对）
+
+Cloudflare Workers Builds 的 **Root directory 必须填 `cloudflare-worker`**。
+填 `/`（仓库根）会找不到 `wrangler.jsonc`，构建虽然显示绿色，但部署的是空的占位 Worker。
+
+正确配置：
+
+| 项 | 值 |
+| --- | --- |
+| Root directory | `cloudflare-worker` |
+| Build command | 留空（None） |
+| Deploy command | `npx wrangler deploy` |
+
+本地已验证：`npx wrangler deploy --dry-run` → `Total Upload: 17.59 KiB / gzip: 5.87 KiB`。
