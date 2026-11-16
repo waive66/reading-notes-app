@@ -26,6 +26,7 @@ export default function Settings() {
   var [loadingModels, setLoadingModels] = useState(false)
   var [toast, setToast] = useState('')
   var [ack, setAck] = useState(false)
+  var [proxyTest, setProxyTest] = useState(null)
 
   var p = getProvider(pid)
   var storage = keyStorageInfo()
@@ -124,6 +125,34 @@ export default function Settings() {
     setApiKey('')
     setTestResult(null)
     flash('已恢复默认配置（并清除该服务商的密钥）')
+  }
+
+  async function testProxy() {
+    var c = loadConfig()
+    if (!c.proxyBase) { setProxyTest({ ok: false, busy: false, msg: '还没填后端代理地址' }); return }
+    setProxyTest({ ok: true, busy: true, msg: '正在测试…' })
+    var ctrl = new AbortController()
+    var t = setTimeout(function () { ctrl.abort() }, 12000)
+    try {
+      var headers = {}
+      if (c.appToken) headers['X-App-Token'] = c.appToken
+      var url = c.proxyBase.replace(/\/+$/, '') + '/api/ai/health'
+      var r = await fetch(url, { headers: headers, signal: ctrl.signal })
+      clearTimeout(t)
+      var j = await r.json().catch(function () { return null })
+      if (r.status === 401) {
+        setProxyTest({ ok: false, busy: false, msg: '连上了，但口令无效（401）' })
+      } else if (r.ok && j && j.ok) {
+        var keyState = (j.providers && j.providers.openrouter) ? '已配置' : '未配置'
+        setProxyTest({ ok: true, busy: false, msg: '连接正常 · 默认模型 ' + (j.defaultModel || '-') + ' · 密钥' + keyState })
+      } else {
+        setProxyTest({ ok: false, busy: false, msg: '服务返回 HTTP ' + r.status })
+      }
+    } catch (e) {
+      clearTimeout(t)
+      var why = (e && e.name === 'AbortError') ? '12 秒无响应（多半是网络线路问题）' : (e.message || '网络错误')
+      setProxyTest({ ok: false, busy: false, msg: '连不上：' + why })
+    }
   }
 
   function toggleAck(val) {
@@ -302,6 +331,16 @@ export default function Settings() {
           <li>只有明确标注「免费」的模型才会自动调用；其余模型需在此页手动确认。</li>
           <li>应用不会自动切换模型，也不会自动充值。</li>
         </ul>
+        <div className="form-group" style={{ marginTop: 12 }}>
+          <label>连接自检</label>
+          <button className="btn btn-secondary" style={{ width: '100%' }} onClick={testProxy}>
+            {proxyTest && proxyTest.busy ? '正在测试…' : '测试连接（不消耗 AI 额度）'}
+          </button>
+          {proxyTest && !proxyTest.busy ? (
+            <div className={proxyTest.ok ? 'test-ok' : 'test-fail'} style={{ marginTop: 8 }}>{proxyTest.msg}</div>
+          ) : null}
+        </div>
+
         <button className="link-center" onClick={function () { logout(); navigate('/login') }}>退出登录</button>
       </section>
 

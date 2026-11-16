@@ -15,10 +15,13 @@ function defaults() {
   return {
     active: 'openrouter',
     mode: 'proxy', // proxy = 走后端代理（推荐）；byok = 用户自带密钥直连
-    proxyBase: '',
+    // 已部署的 Cloudflare Worker 地址（2026-11-16 验证通过）；可随时在设置页改回本地代理
+    proxyBase: 'https://reading-notes-app.lgsmartine600.workers.dev',
     // 与服务端 APP_TOKEN 一致的访问口令（公网代理必须填，否则会被 401）
     appToken: '',
     paidAck: {},   // { 'provider|model': true } 用户已确认可能计费
+    // 客户端等待上游的总时长（免费模型较慢，放宽到 65 秒）
+    timeoutMs: 65000,
     debounceMs: 6000,    // 实时陪伴：停止输入多久后触发
     minIntervalMs: 15000, // 实时陪伴：两次调用最小间隔（防额度浪费）
     providers: {

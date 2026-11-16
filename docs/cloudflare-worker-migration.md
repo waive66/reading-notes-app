@@ -1,6 +1,14 @@
 # 迁移报告：Express → Cloudflare Workers Free
 
-> 日期：2026-11-16　状态：**代码完成 + 本地 22 项测试通过；未部署到 Cloudflare**（无账号操作，不虚构成功）
+> 日期：2026-11-16　状态：**已部署并通过真实接口验证**
+>
+> - Worker 地址：https://reading-notes-app.lgsmartine600.workers.dev
+> - 实测：GET /health → 200，
+untime=cloudflare-worker，hasOpenRouterKey=true
+> - 实测：无口令 / 错口令调用 POST /api/ai/analyze → 401
+> - 实测：匿名 GET /api/ai/health → 401
+> - 已用 wrangler 4.50.0 固定版本解决构建镜像 Node 20 与 wrangler 4.162 要求 Node 22 的冲突
+
 
 ---
 

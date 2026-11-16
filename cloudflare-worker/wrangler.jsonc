@@ -17,7 +17,7 @@
     "AI_RATE_PER_MIN": "10",
     "AI_RATE_PER_DAY": "200",
     "AI_GLOBAL_DAILY": "300",
-    "AI_TIMEOUT_MS": "25000",
+    "AI_TIMEOUT_MS": "55000",
     "APP_REFERER": "https://xinjian.local"
   }
 
