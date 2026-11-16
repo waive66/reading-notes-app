@@ -3,25 +3,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../App'
 
 export default function Navbar() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  var user = useAuth().user
+  var logout = useAuth().logout
+  var navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
-  return (
-    <nav className="navbar">
-      <div className="navbar-inner">
-        <Link to="/" className="navbar-logo">
-          📚 读书<span>阁</span>
-        </Link>
-        <div className="navbar-right">
-          <span className="navbar-user">👋 {user?.username}</span>
-          <button className="navbar-logout" onClick={handleLogout}>退出登录</button>
-        </div>
-      </div>
-    </nav>
+  return React.createElement('nav', { className: 'navbar' },
+    React.createElement('div', { className: 'navbar-inner' },
+      React.createElement(Link, { to: '/', className: 'navbar-logo' }, '心', React.createElement('span', null, '札记')),
+      React.createElement('div', { className: 'navbar-right' },
+        React.createElement('span', { className: 'navbar-user' }, user ? user.username : ''),
+        React.createElement('button', { className: 'navbar-logout', onClick: function() { logout(); navigate('/login') } }, '离开')
+      )
+    )
   )
 }

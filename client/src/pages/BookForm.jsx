@@ -1,52 +1,45 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAuth, API } from '../App'
+import { DB } from '../App'
 
 export default function BookForm() {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEdit = Boolean(id)
-  const fileRef = useRef()
 
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
-  const [coverFile, setCoverFile] = useState(null)
   const [coverPreview, setCoverPreview] = useState(null)
-  const [currentCover, setCurrentCover] = useState('')
+  const [coverData, setCoverData] = useState('')
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(isEdit)
+  const fileRef = useRef(null)
 
   useEffect(() => {
-    if (isEdit) {
-      fetchBook()
-    }
+    if (isEdit) { fetchBook() }
   }, [id])
 
   const fetchBook = async () => {
-    try {
-      const res = await fetch(`${API}/books/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      })
-      const data = await res.json()
-      if (res.ok) {
-        setTitle(data.title)
-        setAuthor(data.author || '')
-        setCurrentCover(data.cover_image || '')
-      } else {
-        navigate('/')
-      }
-    } catch (err) {
+    const book = await DB.get('books', parseFloat(id))
+    if (book) {
+      setTitle(book.title)
+      setAuthor(book.author || '')
+      setCoverData(book.cover_image || '')
+    } else {
       navigate('/')
-    } finally {
-      setFetching(false)
     }
+    setFetching(false)
   }
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
     if (file) {
-      setCoverFile(file)
-      setCoverPreview(URL.createObjectURL(file))
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        setCoverData(ev.target.result)
+        setCoverPreview(ev.target.result)
+      }
+      reader.readAsDataURL(file)
     }
   }
 
@@ -55,93 +48,76 @@ export default function BookForm() {
     if (!title.trim()) return
     setLoading(true)
 
-    try {
-      const formData = new FormData()
-      formData.append('title', title)
-      formData.append('author', author)
-      if (coverFile) {
-        formData.append('cover', coverFile)
-      }
-
-      const url = isEdit ? `${API}/books/${id}` : `${API}/books`
-      const method = isEdit ? 'PUT' : 'POST'
-
-      const res = await fetch(url, {
-        method,
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: formData
-      })
-
-      const data = await res.json()
-      if (res.ok) {
-        navigate(`/books/${data.id}`)
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
+    if (isEdit) {
+      await DB.update('books', parseFloat(id), { title, author, cover_image: coverData })
+      navigate(`/books/${id}`)
+    } else {
+      const book = await DB.add('books', { username: JSON.parse(localStorage.getItem('currentUser') || '{}')?.username, title, author, cover_image: coverData })
+      navigate(`/books/${book.id}`)
     }
   }
 
-  if (fetching) {
-    return (
-      <div className="book-form-page">
-        <p style={{ color: '#999' }}>加载中...</p>
-      </div>
-    )
-  }
+  if (fetching) return (
+    <div className="book-form-page" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: '#8A7A6A', fontStyle: 'italic' }}>加载中...</p>
+    </div>
+  )
 
   return (
-    <div className="book-form-page">
-      <form className="book-form-card" onSubmit={handleSubmit}>
-        <h1>{isEdit ? '编辑书籍' : '添加新书'}</h1>
+    <div className="book-form-page" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+      background: 'radial-gradient(ellipse at center, rgba(60, 30, 15, 0.4) 0%, transparent 70%)'
+    }}>
+      <form onSubmit={handleSubmit} style={{
+        background: 'rgba(40, 22, 14, 0.85)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(212, 197, 178, 0.1)',
+        borderRadius: 18,
+        padding: '32px 28px',
+        width: '100%',
+        maxWidth: 440,
+        boxShadow: '0 8px 40px rgba(0,0,0,0.5)'
+      }}>
+        <h1 style={{
+          fontSize: 22,
+          marginBottom: 24,
+          color: '#D4C5B2',
+          textAlign: 'center',
+          letterSpacing: 1
+        }}>
+          {isEdit ? '编辑书籍' : '添加新书'}
+        </h1>
 
         <div className="form-group">
           <label>书名 *</label>
-          <input
-            type="text"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="输入书名"
-            required
-          />
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="输入书名" required />
         </div>
 
         <div className="form-group">
           <label>作者</label>
-          <input
-            type="text"
-            value={author}
-            onChange={e => setAuthor(e.target.value)}
-            placeholder="输入作者（可选）"
-          />
+          <input type="text" value={author} onChange={e => setAuthor(e.target.value)} placeholder="输入作者（可选）" />
         </div>
 
         <div className="form-group">
           <label>封面图片</label>
-          <div className="file-input-wrapper">
+          <div className="file-input-wrapper" onClick={() => fileRef.current?.click()}>
             <div className="file-input-label">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="17 8 12 3 7 8" />
-                <line x1="12" y1="3" x2="12" y2="15" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
               </svg>
-              选择图片（jpg / png / gif / webp）
+              选择封面图片
             </div>
-            <input type="file" accept="image/*" ref={fileRef} onChange={handleFileChange} />
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
           </div>
-          {coverPreview && (
-            <img src={coverPreview} alt="preview" className="preview-image" />
-          )}
-          {!coverPreview && currentCover && (
-            <img src={`${API.replace('/api', '')}${currentCover}`} alt="current cover" className="preview-image" />
+          {(coverPreview || coverData) && (
+            <img src={coverPreview || coverData} alt="preview" className="preview-image" />
           )}
         </div>
 
         <div className="form-btns">
-          <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>
-            取消
-          </button>
+          <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>取消</button>
           <button type="submit" className="btn btn-primary" disabled={loading || !title.trim()}>
             {loading ? '保存中...' : isEdit ? '保存修改' : '添加书籍'}
           </button>

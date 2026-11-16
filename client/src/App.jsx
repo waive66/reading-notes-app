@@ -1,82 +1,85 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Home from './pages/Home'
 import BookDetail from './pages/BookDetail'
 import BookForm from './pages/BookForm'
-import Navbar from './components/Navbar'
+import Settings from './pages/Settings'
 
-// API 地址：部署到 Vercel 后改成你的后端地址
-// 开发环境用 localhost，生产环境换成云端地址
-const API = window.location.hostname === 'localhost'
-  ? 'http://localhost:3001/api'
-  : 'https://reading-notes-api.up.railway.app/api'
+var DB = {
+  async get(store, id) {
+    var data = JSON.parse(localStorage.getItem('db_' + store) || '[]')
+    return data.find(item => item.id === id)
+  },
+  async getAll(store) {
+    return JSON.parse(localStorage.getItem('db_' + store) || '[]')
+  },
+  async add(store, item) {
+    var data = await this.getAll(store)
+    item.id = Date.now() + Math.random()
+    item.created_at = new Date().toISOString()
+    data.push(item)
+    localStorage.setItem('db_' + store, JSON.stringify(data))
+    return item
+  },
+  async update(store, id, updates) {
+    var data = await this.getAll(store)
+    var idx = data.findIndex(item => item.id === id)
+    if (idx === -1) return null
+    data[idx] = Object.assign({}, data[idx], updates)
+    localStorage.setItem('db_' + store, JSON.stringify(data))
+    return data[idx]
+  },
+  async delete(store, id) {
+    var data = await this.getAll(store)
+    var filtered = data.filter(item => item.id !== id)
+    localStorage.setItem('db_' + store, JSON.stringify(filtered))
+    return true
+  }
+}
 
-const AuthContext = createContext(null)
+export { DB }
+
+var AuthContext = createContext(null)
 
 export function useAuth() {
   return useContext(AuthContext)
 }
 
-export { API }
-
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth()
-  if (loading) return null
-  if (!user) return <Navigate to="/login" />
-  return children
+function ProtectedRoute(children) {
+  var auth = useAuth()
+  // 冷启动时先等登录态从 localStorage 恢复，否则深链接会被误判为未登录而跳回首页
+  if (auth.loading) return null
+  if (!auth.user) return React.createElement(Navigate, { to: '/login' })
+  return children.children
 }
 
 export default function App() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  var [user, setUser] = useState(null)
+  var [loading, setLoading] = useState(true)
+  var location = useLocation()
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      fetch(`${API}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.id) {
-            setUser(data)
-          } else {
-            localStorage.removeItem('token')
-          }
-          setLoading(false)
-        })
-        .catch(() => {
-          localStorage.removeItem('token')
-          setLoading(false)
-        })
-    } else {
-      setLoading(false)
-    }
+  useEffect(function() {
+    var savedUser = localStorage.getItem('currentUser')
+    if (savedUser) setUser(JSON.parse(savedUser))
+    setLoading(false)
   }, [])
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token)
-    setUser(userData)
-  }
+  function login(username) { setUser({ username: username }) }
+  function logout() { localStorage.removeItem('currentUser'); setUser(null) }
 
-  const logout = () => {
-    localStorage.removeItem('token')
-    setUser(null)
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {user && <Navbar />}
-      <Routes>
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
-        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-        <Route path="/books/new" element={<ProtectedRoute><BookForm /></ProtectedRoute>} />
-        <Route path="/books/:id" element={<ProtectedRoute><BookDetail /></ProtectedRoute>} />
-        <Route path="/books/:id/edit" element={<ProtectedRoute><BookForm /></ProtectedRoute>} />
-      </Routes>
-    </AuthContext.Provider>
+  return React.createElement(AuthContext.Provider, { value: { user: user, login: login, logout: logout, loading: loading } },
+    React.createElement('div', { className: 'page-transition-wrapper', key: location.pathname },
+      React.createElement(Routes, { location: location },
+        React.createElement(Route, { path: '/login', element: !user ? React.createElement(Login, null) : React.createElement(Navigate, { to: '/' }) }),
+        React.createElement(Route, { path: '/register', element: !user ? React.createElement(Register, null) : React.createElement(Navigate, { to: '/' }) }),
+        React.createElement(Route, { path: '/', element: React.createElement(ProtectedRoute, null, React.createElement(Home, null)) }),
+        React.createElement(Route, { path: '/books/new', element: React.createElement(ProtectedRoute, null, React.createElement(BookForm, null)) }),
+        React.createElement(Route, { path: '/books/:id', element: React.createElement(ProtectedRoute, null, React.createElement(BookDetail, null)) }),
+        React.createElement(Route, { path: '/books/:id/edit', element: React.createElement(ProtectedRoute, null, React.createElement(BookForm, null)) }),
+        React.createElement(Route, { path: '/settings', element: React.createElement(ProtectedRoute, null, React.createElement(Settings, null)) })
+      )
+    )
   )
 }

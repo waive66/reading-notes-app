@@ -2,8 +2,13 @@
   "name": "reading-notes-server",
   "version": "1.0.0",
   "private": true,
+  "description": "心笺 App 的 AI 代理服务（OpenRouter / Gemini / DeepSeek）",
+  "main": "index.js",
   "scripts": {
     "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

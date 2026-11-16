@@ -1,6 +1,6 @@
 {
-  "name": "读书阁",
-  "short_name": "读书阁",
+  "name": "心笺",
+  "short_name": "心笺",
   "description": "分享你的阅读感悟",
   "start_url": "/",
   "display": "standalone",

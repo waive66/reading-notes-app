@@ -8,6 +8,8 @@
   "deploy": {
     "startCommand": "cd server && node index.js",
     "healthcheckPath": "/health",
-    "restartPolicyType": "ALWAYS"
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
   }
 }

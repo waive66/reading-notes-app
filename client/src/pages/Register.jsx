@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth, API } from '../App'
+import { useAuth } from '../App'
 
 export default function Register() {
   const [username, setUsername] = useState('')
@@ -9,61 +9,38 @@ export default function Register() {
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    setError('')
-    if (password.length < 4) {
-      setError('密码至少需要4位字符')
+    if (!username.trim()) { setError('请输入用户名'); return }
+    if (password.length < 4) { setError('密码至少4位'); return }
+
+    const users = JSON.parse(localStorage.getItem('db_users') || '[]')
+    if (users.find(u => u.username === username)) {
+      setError('用户名已存在')
       return
     }
-    try {
-      const res = await fetch(`${API}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error)
-        return
-      }
-      login(data.token, data.user)
-      navigate('/')
-    } catch (err) {
-      setError('网络错误，请确保后端已启动')
-    }
+    users.push({ username, password: btoa(password) })
+    localStorage.setItem('db_users', JSON.stringify(users))
+    login(username)
+    navigate('/')
   }
 
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <h1>📖 读书阁</h1>
+        <h1>心笺</h1>
         <p className="subtitle">创建一个新账号</p>
         {error && <div className="error-msg">{error}</div>}
         <div className="form-group">
           <label>用户名</label>
-          <input
-            type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            placeholder="给自己取个名字"
-            required
-          />
+          <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="给自己取个名字" required />
         </div>
         <div className="form-group">
           <label>密码</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="至少4位密码"
-            required
-          />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="至少4位密码" required />
         </div>
         <button type="submit" className="btn btn-primary">注 册</button>
-        <div className="auth-link">
-          已有账号？<Link to="/login">去登录</Link>
-        </div>
+        <div className="auth-link">已有账号？<Link to="/login">去登录</Link></div>
       </form>
     </div>
   )

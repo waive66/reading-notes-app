@@ -1,9 +1,40 @@
+# 依赖
 node_modules/
+**/node_modules/
+
+# 环境变量（任何位置的 .env 都不许提交）
 .env
+.env.*
+**/.env
+!.env.example
+!**/.env.example
+
+# 数据库与上传
 *.db
+*.sqlite
 server/uploads/*
 !server/uploads/.gitkeep
+
+# 构建产物
 client/dist/
+client/dist-temp/
 android/
 dist/
+build/
+.gradle/
+
+# 系统与编辑器
 .DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# 本机 Android SDK 路径（每台机器不同，不能提交）
+local.properties
+**/local.properties
+*.apk
+
+# Vite 生成的临时配置副本
+*.timestamp-*.mjs
+*.bak
+**/local.properties.bak

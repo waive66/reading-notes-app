@@ -1,8 +1,8 @@
-[phases.setup]
-nixPkgs = ["nodejs_latest", "python3"]
+# 仅当 Railway 的 Root Directory 设为 server 时才会用到本文件。
+# 若 Root Directory 留空（推荐），请以仓库根的 nixpacks.toml 为准。
 
 [phases.install]
-cmds = ["npm install"]
+cmds = ["npm ci --omit=dev"]
 
 [start]
 cmd = "node index.js"

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ReadingNotes" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">#1A0F0A</item>
+        <item name="colorPrimaryDark">#0F0805</item>
+        <item name="colorAccent">#C49A6C</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>
